@@ -1,0 +1,19 @@
+{
+  "name": "3minutes-networking-study",
+  "version": "0.0.1",
+  "author": "k-furusho",
+  "scripts": {
+    "test": "vitest",
+    "http-server": "ts-node-dev http/execute-server.ts"
+  },
+  "volta": {
+    "node": "20.10.0",
+    "npm": "10.2.3"
+  },
+  "dependencies": {
+    "@types/node": "^20.10.6",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.1.1"
+  }
+}
