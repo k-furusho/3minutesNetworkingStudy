@@ -1,5 +1,8 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import * as net from "net";
+import * as fs from "fs";
+import * as path from "path";
+import fetch from "node-fetch";
 import server from "./server";
 
 const PORT = process.env.PORT ?? 8080;
@@ -48,41 +51,65 @@ describe("TCPサーバーテスト", () => {
 });
 
 describe("HTTPサーバーテスト", () => {
-  beforeAll((done) => {
-    server.listen(PORT);
-  });
-
-  afterAll((done) => {
-    server.close((e) => {
-      if (e != null) {
-        console.error(e);
-      }
+  beforeAll(() => {
+    return new Promise((resolve, reject) => {
+      server.listen(PORT, (err) => {
+        if (err) reject(err);
+        else resolve();
+      });
     });
   });
 
-  it("/index.htmlをリクエストしたとき200 OKが返されるべき", (done) => {
-    const client = new net.Socket();
-
-    client.connect({ port: PORT }, () => {
-      client.write("GET /index.html HTTP/1.1\r\n\r\n");
-    });
-
-    client.on("data", (data) => {
-      expect(data.toString()).toContain("HTTP/1.0 200 OK");
-      client.destroy(); // ソケットを閉じる
+  afterAll(() => {
+    return new Promise((resolve, reject) => {
+      server.close((err) => {
+        if (err) reject(err);
+        else resolve();
+      });
     });
   });
 
-  it("存在しないファイルにリクエストしたとき404 Not Foundが返されるべき", (done) => {
-    const client = new net.Socket();
+  it("【GETリクエスト】/index.htmlをリクエストしたとき /public/index.html が返されるべき", async () => {
+    const response = await fetch(`http://localhost:${PORT}/index.html`);
 
-    client.connect({ port: PORT }, () => {
-      client.write("GET /nonexistent.html HTTP/1.1\r\n\r\n");
-    });
+    expect(response.ok).toBeTruthy();
+    expect(await response.text()).toBe(
+      fs.readFileSync(path.join(__dirname, "public", "index.html")).toString()
+    );
+    expect(response.headers.get("Content-Type")).toContain(
+      "text/html; charset=utf-8"
+    );
+  });
 
-    client.on("data", (data) => {
-      expect(data.toString()).toContain("HTTP/1.0 404 Not Found");
-      client.destroy(); // ソケットを閉じる
-    });
+  it("【GETリクエスト】/index.jsをリクエストしたとき /public/index.js が返されるべき", async () => {
+    const response = await fetch(`http://localhost:${PORT}/index.js`);
+
+    expect(response.ok).toBeTruthy();
+    expect(await response.text()).toBe(
+      fs.readFileSync(path.join(__dirname, "public", "index.js")).toString()
+    );
+    expect(response.headers.get("Content-Type")).toContain(
+      "text/javascript; charset=utf-8"
+    );
+  });
+
+  it("【GETリクエスト】/index.cssをリクエストしたとき /public/index.css が返されるべき", async () => {
+    const response = await fetch(`http://localhost:${PORT}/index.css`);
+
+    expect(response.ok).toBeTruthy();
+    expect(await response.text()).toBe(
+      fs.readFileSync(path.join(__dirname, "public", "index.css")).toString()
+    );
+    expect(response.headers.get("Content-Type")).toBe(
+      "text/css; charset=utf-8"
+    );
+  });
+
+  it("【GETリクエスト】存在しないファイルにリクエストしたとき404 Not Foundが返されるべき", async () => {
+    const response = await fetch(`http://localhost:${PORT}/hogehoge.html`);
+
+    expect(response.ok).toBeFalsy();
+    expect(await response.status).toBe(404);
+    expect(await response.statusText).toBe("Not Found");
   });
 });
