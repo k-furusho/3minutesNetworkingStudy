@@ -80,6 +80,7 @@ describe("HTTPサーバーテスト", () => {
       "text/html; charset=utf-8"
     );
   });
+
   it("【GETリクエスト】/index.jsをリクエストしたとき /public/index.js が返されるべき", async () => {
     const response = await fetch(`http://localhost:${PORT}/index.js`);
 
@@ -104,16 +105,11 @@ describe("HTTPサーバーテスト", () => {
     );
   });
 
-  it("存在しないファイルにリクエストしたとき404 Not Foundが返されるべき", (done) => {
-    const client = new net.Socket();
+  it("【GETリクエスト】存在しないファイルにリクエストしたとき404 Not Foundが返されるべき", async () => {
+    const response = await fetch(`http://localhost:${PORT}/hogehoge.html`);
 
-    client.connect({ port: PORT }, () => {
-      client.write("GET /nonexistent.html HTTP/1.1\r\n\r\n");
-    });
-
-    client.on("data", (data) => {
-      expect(data.toString()).toContain("HTTP/1.0 404 Not Found");
-      client.destroy(); // ソケットを閉じる
-    });
+    expect(response.ok).toBeFalsy();
+    expect(await response.status).toBe(404);
+    expect(await response.statusText).toBe("Not Found");
   });
 });
