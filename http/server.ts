@@ -28,7 +28,9 @@ server.on("connection", (socket) => {
         const contentType = getContentType(filePath);
         // 成功した場合の応答
         socket.write(`HTTP/1.0 200 OK\r\nContent-Type: ${contentType}\r\n\r\n`);
-        socket.write(content);
+        if (method === "GET") {
+          socket.write(content);
+        }
         socket.end();
       }
     });
