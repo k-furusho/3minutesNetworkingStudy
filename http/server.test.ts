@@ -80,6 +80,29 @@ describe("HTTPサーバーテスト", () => {
       "text/html; charset=utf-8"
     );
   });
+  it("【GETリクエスト】/index.jsをリクエストしたとき /public/index.js が返されるべき", async () => {
+    const response = await fetch(`http://localhost:${PORT}/index.js`);
+
+    expect(response.ok).toBeTruthy();
+    expect(await response.text()).toBe(
+      fs.readFileSync(path.join(__dirname, "public", "index.js")).toString()
+    );
+    expect(response.headers.get("Content-Type")).toContain(
+      "text/javascript; charset=utf-8"
+    );
+  });
+
+  it("【GETリクエスト】/index.cssをリクエストしたとき /public/index.css が返されるべき", async () => {
+    const response = await fetch(`http://localhost:${PORT}/index.css`);
+
+    expect(response.ok).toBeTruthy();
+    expect(await response.text()).toBe(
+      fs.readFileSync(path.join(__dirname, "public", "index.css")).toString()
+    );
+    expect(response.headers.get("Content-Type")).toBe(
+      "text/css; charset=utf-8"
+    );
+  });
 
   it("存在しないファイルにリクエストしたとき404 Not Foundが返されるべき", (done) => {
     const client = new net.Socket();
