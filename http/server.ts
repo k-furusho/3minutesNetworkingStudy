@@ -8,12 +8,13 @@ server.on("connection", (socket) => {
   socket.on("data", (data) => {
     console.log(data.toString());
 
-    // リクエストラインの取得（例：GET /index.html HTTP/1.1）
-    const requestLine = data.toString().split("\n")[0];
+    const requestString = data.toString();
+    const requestLine = requestString.split("\n")[0];
     const requestParts = requestLine.split(" ");
-    const requestedFile = requestParts[1]; // 例：/index.html
+    const method = requestParts[0]; // リクエストメソッド（GET、HEADなど）
+    const requestedFile = requestParts[1];
 
-    // パブリックディレクトリからファイルを読み込む
+    // .public/からファイルを読み込む
     const filePath = path.join(__dirname, "public", requestedFile);
     console.log("filePath：", filePath);
     // ファイルの読み込みと送信
@@ -27,7 +28,9 @@ server.on("connection", (socket) => {
         const contentType = getContentType(filePath);
         // 成功した場合の応答
         socket.write(`HTTP/1.0 200 OK\r\nContent-Type: ${contentType}\r\n\r\n`);
-        socket.write(content);
+        if (method === "GET") {
+          socket.write(content);
+        }
         socket.end();
       }
     });

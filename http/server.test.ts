@@ -112,4 +112,14 @@ describe("HTTPサーバーテスト", () => {
     expect(await response.status).toBe(404);
     expect(await response.statusText).toBe("Not Found");
   });
+
+  it("HEADリクエストでヘッダーのみが返されるべき", async () => {
+    const response = await fetch(`http://localhost:${PORT}/index.html`, {
+      method: "HEAD",
+    });
+    expect(response.headers.get("Content-Type")).toContain(
+      "text/html; charset=utf-8"
+    );
+    expect(response.bodyUsed).toBeFalsy(); // レスポンスボディは未使用であるべき
+  });
 });
