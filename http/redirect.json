@@ -1,0 +1,12 @@
+[
+  {
+    "from": "/from.html",
+    "to": "/to.html",
+    "type": "TEMPORARY"
+  },
+  {
+    "from": "/from.html",
+    "to": "/to.html",
+    "type": "PERMANENT"
+  }
+]
