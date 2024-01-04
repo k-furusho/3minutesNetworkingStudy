@@ -1,8 +1,8 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const button = document.querySelector(".js-hello");
+document.addEventListener('DOMContentLoaded', () => {
+  const button = document.querySelector('.js-hello')
 
-  button.addEventListener("click", () => {
-    alert("hello!");
-  });
-  console.log(button);
-});
+  button.addEventListener('click', () => {
+    alert('hello!')
+  })
+  console.log(button)
+})
