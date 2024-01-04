@@ -10,66 +10,86 @@ const redirectRules = JSON.parse(
 
 const server = net.createServer();
 
+// 新しい接続が確立されるたびに呼ばれる
 server.on("connection", (socket) => {
   socket.on("data", (data) => {
     const requestData = data.toString();
-
-    // リクエストヘッダとボディを分割
     if (requestData.includes("\r\n\r\n")) {
+      // リクエストヘッダとボディを分割
       const [header, body] = requestData.split("\r\n\r\n");
-
-      // リクエストメソッドとパスの解析
-      const requestLine = header.split("\n")[0];
-      const [method, requestedPath] = requestLine.split(" ");
-
-      // リダイレクトルールのチェック
-      const redirectRule = redirectRules.find(
-        (rule: { from: string }) => rule.from === requestedPath
-      );
-      if (redirectRule) {
-        const statusCode =
-          redirectRule.type === "TEMPORARY"
-            ? "302 Found"
-            : "301 Moved Permanently";
-        socket.write(
-          `HTTP/1.1 ${statusCode}\r\nLocation: ${redirectRule.to}\r\n\r\n`
-        );
-        socket.end();
-        return;
-      }
-
-      if (method === "GET" || method === "HEAD") {
-        // GET または HEAD リクエストの処理
-        // .public/からファイルを読み込む
-        const filePath = path.join(__dirname, "public", requestedPath);
-        // ファイルの読み込みと送信
-        fs.readFile(filePath, (err, content) => {
-          if (err) {
-            // ファイルが見つからない場合のエラー応答
-            socket.write("HTTP/1.0 404 Not Found\n\n");
-            socket.end();
-          } else {
-            // Content-Typeの決定
-            const contentType = getContentType(filePath);
-            // 成功した場合の応答
-            socket.write(
-              `HTTP/1.0 200 OK\r\nContent-Type: ${contentType}\r\n\r\n`
-            );
-            if (method === "GET") {
-              socket.write(content);
-            }
-            socket.end();
-          }
-        });
-      } else if (method === "POST") {
-        // POSTリクエストの処理
-        socket.write("HTTP/1.1 200 OK\r\n\r\n");
-        socket.write(body); // エコーバック
-        socket.end();
-      }
+      const [method, requestedPath] = parseRequest(header);
+      handleRequest(socket, method, requestedPath, body);
     }
   });
 });
+
+function parseRequest(header: string): [string, string] {
+  const requestLine = header.split("\n")[0];
+  return requestLine.split(" ");
+}
+
+function handleRequest(
+  socket: net.Socket,
+  method: string,
+  path: string,
+  body: string
+) {
+  const redirectRule = redirectRules.find((rule) => rule.from === path);
+  if (redirectRule) {
+    return handleRedirect(socket, redirectRule);
+  }
+  switch (method) {
+    case "GET":
+    case "HEAD":
+      return handleGetOrHeadRequest(socket, method, path);
+    case "POST":
+      return handlePostRequest(socket, body);
+    default:
+      return handleUnknownRequest(socket);
+  }
+}
+
+function handleRedirect(
+  socket: net.Socket,
+  rule: { to: string; type: string }
+) {
+  const statusCode =
+    rule.type === "TEMPORARY" ? "302 Found" : "301 Moved Permanently";
+  socket.write(`HTTP/1.1 ${statusCode}\r\nLocation: ${rule.to}\r\n\r\n`);
+  socket.end();
+}
+
+function handleGetOrHeadRequest(
+  socket: net.Socket,
+  method: string,
+  requestedPath: string
+) {
+  const filePath = path.join(__dirname, "public", requestedPath);
+  fs.readFile(filePath, (err, content) => {
+    if (err) {
+      socket.write("HTTP/1.0 404 Not Found\n\n");
+      socket.end();
+      return;
+    }
+    const contentType = getContentType(filePath);
+    socket.write(`HTTP/1.0 200 OK\r\nContent-Type: ${contentType}\r\n\r\n`);
+    if (method === "GET") {
+      socket.write(content);
+    }
+    socket.end();
+  });
+}
+
+function handlePostRequest(socket: net.Socket, body: string) {
+  socket.write("HTTP/1.1 200 OK\r\n\r\n");
+  socket.write(body);
+  socket.end();
+}
+
+function handleUnknownRequest(socket: net.Socket) {
+  socket.write("HTTP/1.1 400 Bad Request\r\n\r\n");
+  socket.end();
+}
 
 function getContentType(filePath: string): string {
   const ext = path.extname(filePath);
