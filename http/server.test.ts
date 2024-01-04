@@ -113,7 +113,7 @@ describe("HTTPサーバーテスト", () => {
     expect(await response.statusText).toBe("Not Found");
   });
 
-  it("HEADリクエストでヘッダーのみが返されるべき", async () => {
+  it("【HEADリクエスト】HEADリクエストでヘッダーのみが返されるべき", async () => {
     const response = await fetch(`http://localhost:${PORT}/index.html`, {
       method: "HEAD",
     });
@@ -121,5 +121,26 @@ describe("HTTPサーバーテスト", () => {
       "text/html; charset=utf-8"
     );
     expect(response.bodyUsed).toBeFalsy(); // レスポンスボディは未使用であるべき
+  });
+  it("【リダイレクト】一時的リダイレクトが正しく機能する", async () => {
+    const response = await fetch(
+      `http://localhost:${PORT}/redirect-from.html`,
+      { redirect: "manual" }
+    );
+
+    expect(response.status).toBe(302); // ステータスコードが 302 であること
+    expect(response.headers.get("location")).toBe("/redirect-to.html"); // Location ヘッダーが正しいパスを指していること
+  });
+
+  it("【リダイレクト】永続的リダイレクトが正しく機能する", async () => {
+    const response = await fetch(
+      `http://localhost:${PORT}/permanent-redirect-from.html`,
+      { redirect: "manual" }
+    );
+
+    expect(response.status).toBe(301); // ステータスコードが 301 であること
+    expect(response.headers.get("location")).toBe(
+      "/permanent-redirect-to.html"
+    ); // Location ヘッダーが正しいパスを指していること
   });
 });

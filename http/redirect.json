@@ -1,0 +1,12 @@
+[
+  {
+    "from": "/redirect-from.html",
+    "to": "/redirect-to.html",
+    "type": "TEMPORARY"
+  },
+  {
+    "from": "/permanent-redirect-from.html",
+    "to": "/permanent-redirect-to.html",
+    "type": "PERMANENT"
+  }
+]
