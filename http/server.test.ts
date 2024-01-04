@@ -143,4 +143,14 @@ describe("HTTPサーバーテスト", () => {
       "/permanent-redirect-to.html"
     ); // Location ヘッダーが正しいパスを指していること
   });
+  it("【POSTリクエスト】POSTリクエストのボディがエコーバックされる", async () => {
+    const testData = "Hello, World!";
+    const response = await fetch(`http://localhost:${PORT}`, {
+      method: "POST",
+      body: testData,
+    });
+
+    expect(response.ok).toBeTruthy();
+    expect(await response.text()).toBe(testData); // レスポンスボディがテストデータと一致するか
+  });
 });
