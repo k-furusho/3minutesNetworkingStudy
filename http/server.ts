@@ -3,6 +3,10 @@ import * as net from "net";
 import * as fs from "fs";
 import * as path from "path";
 
+// const redirectRules = JSON.parse(fs.readFileSync("./redirect.json", "utf8"));
+const redirectRules = JSON.parse(
+  fs.readFileSync(path.join(__dirname, "redirect.json"), "utf8")
+);
 const server = net.createServer();
 server.on("connection", (socket) => {
   socket.on("data", (data) => {
@@ -14,9 +18,24 @@ server.on("connection", (socket) => {
     const method = requestParts[0]; // リクエストメソッド（GET、HEADなど）
     const requestedFile = requestParts[1];
 
+    // リダイレクトルールのチェック
+    const redirectRule = redirectRules.find(
+      (rule: { from: string }) => rule.from === requestedFile
+    );
+    if (redirectRule) {
+      const statusCode =
+        redirectRule.type === "TEMPORARY"
+          ? "302 Found"
+          : "301 Moved Permanently";
+      socket.write(
+        `HTTP/1.1 ${statusCode}\r\nLocation: ${redirectRule.to}\r\n\r\n`
+      );
+      socket.end();
+      return;
+    }
+
     // .public/からファイルを読み込む
     const filePath = path.join(__dirname, "public", requestedFile);
-    console.log("filePath：", filePath);
     // ファイルの読み込みと送信
     fs.readFile(filePath, (err, content) => {
       if (err) {
