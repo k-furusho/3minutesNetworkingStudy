@@ -23,11 +23,13 @@ server.on("connection", (socket) => {
   });
 });
 
+// リクエストヘッダからメソッドとパスを解析
 function parseRequest(header: string): [string, string] {
   const requestLine = header.split("\n")[0];
   return requestLine.split(" ");
 }
 
+// リクエストヘッダからメソッドとパスを解析
 function handleRequest(
   socket: net.Socket,
   method: string,
@@ -49,6 +51,7 @@ function handleRequest(
   }
 }
 
+// リダイレクト処理
 function handleRedirect(
   socket: net.Socket,
   rule: { to: string; type: string }
@@ -59,6 +62,7 @@ function handleRedirect(
   socket.end();
 }
 
+// GET または HEAD リクエスト処理
 function handleGetOrHeadRequest(
   socket: net.Socket,
   method: string,
@@ -80,17 +84,20 @@ function handleGetOrHeadRequest(
   });
 }
 
+// POSTリクエスト処理
 function handlePostRequest(socket: net.Socket, body: string) {
   socket.write("HTTP/1.1 200 OK\r\n\r\n");
-  socket.write(body);
+  socket.write(body); // ボディをエコーバック
   socket.end();
 }
 
+// 未知のリクエストタイプ処理
 function handleUnknownRequest(socket: net.Socket) {
   socket.write("HTTP/1.1 400 Bad Request\r\n\r\n");
   socket.end();
 }
 
+// Content-Typeの決定
 function getContentType(filePath: string): string {
   const ext = path.extname(filePath);
   switch (ext) {
