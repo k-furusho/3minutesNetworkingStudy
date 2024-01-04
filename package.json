@@ -6,7 +6,8 @@
     "test": "vitest",
     "http-server": "ts-node-dev http/execute-server.ts",
     "lint": "eslint . --ext js,ts  --ignore-path .gitignore",
-    "format": "eslint --fix . --ext js,ts"
+    "format": "eslint --fix . --ext js,ts",
+    "prepare": "husky install"
   },
   "volta": {
     "node": "20.10.0",
@@ -24,5 +25,11 @@
     "typescript": "^5.3.3",
     "typescript-eslint": "^0.0.1-alpha.0",
     "vitest": "^1.1.1"
+  },
+  "devDependencies": {
+    "husky": "^8.0.3"
+  },
+  "lint-staged": {
+    "*.{ts, tsx}": "eslint --fix"
   }
 }
